@@ -1,0 +1,6 @@
+﻿{
+  "name": "Acme External Pentest",
+  "target": "Acme Public Platform",
+  "description": "Second-tenant demo project for validating multi-tenant isolation and IDOR protection.",
+  "status": "ACTIVE"
+}
