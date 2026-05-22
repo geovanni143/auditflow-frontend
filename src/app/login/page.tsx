@@ -63,16 +63,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="mb-5 rounded-xl border border-cyan-900 bg-cyan-950/40 px-4 py-3 text-sm text-cyan-100">
-          <p className="font-semibold">Credenciales demo</p>
-          <p className="mt-1 text-cyan-100/90">
-            Admin: admin@auditflow.local / Admin123!
-          </p>
-          <p className="text-cyan-100/90">
-            Auditor: auditor@auditflow.local / Auditor123!
-          </p>
-        </div>
-
         {error && (
           <div className="mb-5 rounded-xl border border-red-900 bg-red-950/60 px-4 py-3 text-sm text-red-200">
             {error}
