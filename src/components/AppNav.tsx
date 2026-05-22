@@ -1,15 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/lib/auth";
 
 type AppNavProps = {
   title?: string;
 };
 
+type NavItem = {
+  href: string;
+  label: string;
+};
+
+const navItems: NavItem[] = [
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+  },
+  {
+    href: "/projects",
+    label: "Proyectos",
+  },
+  {
+    href: "/findings",
+    label: "Findings",
+  },
+  {
+    href: "/users",
+    label: "Usuarios",
+  },
+];
+
 export function AppNav({ title = "AuditFlow" }: AppNavProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   async function handleLogout() {
     try {
@@ -17,6 +42,17 @@ export function AppNav({ title = "AuditFlow" }: AppNavProps) {
     } finally {
       router.replace("/login");
     }
+  }
+
+  function getLinkClassName(href: string) {
+    const isActive = pathname === href;
+
+    return [
+      "rounded-lg px-3 py-2 transition",
+      isActive
+        ? "bg-cyan-400 text-slate-950 font-semibold"
+        : "text-slate-300 hover:bg-slate-800 hover:text-white",
+    ].join(" ");
   }
 
   return (
@@ -28,28 +64,18 @@ export function AppNav({ title = "AuditFlow" }: AppNavProps) {
         </div>
 
         <nav className="flex flex-wrap items-center gap-3 text-sm">
-          <Link
-            href="/dashboard"
-            className="rounded-lg px-3 py-2 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-          >
-            Dashboard
-          </Link>
-
-          <Link
-            href="/projects"
-            className="rounded-lg px-3 py-2 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-          >
-            Proyectos
-          </Link>
-
-          <Link
-            href="/findings"
-            className="rounded-lg px-3 py-2 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-          >
-            Findings
-          </Link>
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={getLinkClassName(item.href)}
+            >
+              {item.label}
+            </Link>
+          ))}
 
           <button
+            type="button"
             onClick={handleLogout}
             className="rounded-lg border border-slate-700 px-3 py-2 text-slate-300 transition hover:border-cyan-400 hover:text-cyan-300"
           >

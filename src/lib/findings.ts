@@ -21,7 +21,7 @@ export function getFindings(
 ): Promise<PageResponse<Finding>> {
   const params = new URLSearchParams();
 
-  if (filters.projectId) {
+  if (filters.projectId !== undefined) {
     params.set("projectId", String(filters.projectId));
   }
 
@@ -36,11 +36,15 @@ export function getFindings(
   params.set("page", String(filters.page ?? 0));
   params.set("size", String(filters.size ?? 10));
 
-  return apiFetch<PageResponse<Finding>>(`/api/findings?${params.toString()}`);
+  return apiFetch<PageResponse<Finding>>(`/api/findings?${params.toString()}`, {
+    method: "GET",
+  });
 }
 
 export function getFindingById(findingId: number): Promise<Finding> {
-  return apiFetch<Finding>(`/api/findings/${findingId}`);
+  return apiFetch<Finding>(`/api/findings/${findingId}`, {
+    method: "GET",
+  });
 }
 
 export function createFinding(payload: FindingCreateRequest): Promise<Finding> {

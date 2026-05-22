@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import type { FormEvent } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ApiError } from "@/lib/api";
@@ -13,6 +14,7 @@ export default function RegisterPage() {
   const [organizationName, setOrganizationName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<
     string,
@@ -29,9 +31,9 @@ export default function RegisterPage() {
 
     try {
       await register({
-        fullName,
-        organizationName: organizationName || undefined,
-        email,
+        fullName: fullName.trim(),
+        organizationName: organizationName.trim(),
+        email: email.trim().toLowerCase(),
         password,
       });
 
@@ -64,12 +66,20 @@ export default function RegisterPage() {
       <section className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
         <div className="mb-8">
           <p className="mb-2 text-sm font-medium text-cyan-400">AuditFlow</p>
+
           <h1 className="text-3xl font-bold tracking-tight text-white">
-            Crear cuenta
+            Crear organización
           </h1>
+
           <p className="mt-2 text-sm text-slate-400">
-            Registra un usuario auditor para acceder al sistema.
+            Registra una nueva organización y su primer administrador.
           </p>
+
+          <div className="mt-4 rounded-xl border border-cyan-900 bg-cyan-950/30 px-4 py-3 text-xs leading-relaxed text-cyan-100">
+            Este registro público no crea auditores. Para crear auditores o
+            administradores internos, inicia sesión como ADMIN y usa la sección
+            Usuarios.
+          </div>
         </div>
 
         {error && (
@@ -84,16 +94,19 @@ export default function RegisterPage() {
               htmlFor="fullName"
               className="mb-2 block text-sm font-medium text-slate-200"
             >
-              Nombre completo
+              Nombre completo del administrador
             </label>
+
             <input
               id="fullName"
               type="text"
+              autoComplete="name"
               className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
               required
             />
+
             {validationErrors?.fullName && (
               <p className="mt-2 text-sm text-red-300">
                 {validationErrors.fullName}
@@ -106,16 +119,25 @@ export default function RegisterPage() {
               htmlFor="organizationName"
               className="mb-2 block text-sm font-medium text-slate-200"
             >
-              Organización
+              Nombre de la organización
             </label>
+
             <input
               id="organizationName"
               type="text"
+              autoComplete="organization"
               className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
               value={organizationName}
               onChange={(event) => setOrganizationName(event.target.value)}
               placeholder="Ej. N3X Security Lab"
+              required
             />
+
+            <p className="mt-2 text-xs text-slate-500">
+              Esta organización será el tenant aislado para proyectos,
+              auditores y hallazgos.
+            </p>
+
             {validationErrors?.organizationName && (
               <p className="mt-2 text-sm text-red-300">
                 {validationErrors.organizationName}
@@ -128,8 +150,9 @@ export default function RegisterPage() {
               htmlFor="email"
               className="mb-2 block text-sm font-medium text-slate-200"
             >
-              Correo
+              Correo del administrador
             </label>
+
             <input
               id="email"
               type="email"
@@ -139,6 +162,7 @@ export default function RegisterPage() {
               onChange={(event) => setEmail(event.target.value)}
               required
             />
+
             {validationErrors?.email && (
               <p className="mt-2 text-sm text-red-300">
                 {validationErrors.email}
@@ -151,8 +175,9 @@ export default function RegisterPage() {
               htmlFor="password"
               className="mb-2 block text-sm font-medium text-slate-200"
             >
-              Contraseña
+              Contraseña del administrador
             </label>
+
             <input
               id="password"
               type="password"
@@ -161,7 +186,9 @@ export default function RegisterPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
+              minLength={8}
             />
+
             {validationErrors?.password && (
               <p className="mt-2 text-sm text-red-300">
                 {validationErrors.password}
@@ -174,7 +201,7 @@ export default function RegisterPage() {
             disabled={isSubmitting}
             className="w-full rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting ? "Registrando..." : "Crear cuenta"}
+            {isSubmitting ? "Creando organización..." : "Crear organización"}
           </button>
         </form>
 

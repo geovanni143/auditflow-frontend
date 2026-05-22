@@ -9,38 +9,36 @@ export type ProjectAuditor = {
   id: number;
   fullName: string;
   email: string;
-  role: "ADMIN" | "AUDITOR";
 };
 
 export type Project = {
   id: number;
-  organizationId: number;
-  organizationName: string;
-  createdById: number;
-  createdByName: string;
   name: string;
-  description: string | null;
   target: string;
+  description?: string | null;
   status: ProjectStatus;
   auditors: ProjectAuditor[];
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type ProjectCreateRequest = {
   name: string;
-  description?: string;
   target: string;
-  status?: ProjectStatus;
+  description?: string;
+  status: ProjectStatus;
 };
 
 export type ProjectUpdateRequest = {
-  name?: string;
+  name: string;
+  target: string;
   description?: string;
-  target?: string;
-  status?: ProjectStatus;
+  status: ProjectStatus;
 };
 
 export type AssignAuditorRequest = {
   auditorId: number;
 };
+
+export type CreateProjectRequest = ProjectCreateRequest;
+export type UpdateProjectRequest = ProjectUpdateRequest;

@@ -7,11 +7,15 @@ import type {
 } from "@/types/project";
 
 export function getProjects(): Promise<Project[]> {
-  return apiFetch<Project[]>("/api/projects");
+  return apiFetch<Project[]>("/api/projects", {
+    method: "GET",
+  });
 }
 
 export function getProjectById(projectId: number): Promise<Project> {
-  return apiFetch<Project>(`/api/projects/${projectId}`);
+  return apiFetch<Project>(`/api/projects/${projectId}`, {
+    method: "GET",
+  });
 }
 
 export function createProject(payload: ProjectCreateRequest): Promise<Project> {
