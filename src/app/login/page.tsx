@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import type { FormEvent } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ApiError } from "@/lib/api";
@@ -9,8 +10,8 @@ import { login } from "@/lib/auth";
 export default function LoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("admin@auditflow.local");
-  const [password, setPassword] = useState("Admin123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,7 +23,7 @@ export default function LoginPage() {
 
     try {
       await login({
-        email,
+        email: email.trim().toLowerCase(),
         password,
       });
 
@@ -62,45 +63,64 @@ export default function LoginPage() {
           </p>
         </div>
 
+        <div className="mb-5 rounded-xl border border-cyan-900 bg-cyan-950/40 px-4 py-3 text-sm text-cyan-100">
+          <p className="font-semibold">Credenciales demo</p>
+          <p className="mt-1 text-cyan-100/90">
+            Admin: admin@auditflow.local / Admin123!
+          </p>
+          <p className="text-cyan-100/90">
+            Auditor: auditor@auditflow.local / Auditor123!
+          </p>
+        </div>
+
         {error && (
           <div className="mb-5 rounded-xl border border-red-900 bg-red-950/60 px-4 py-3 text-sm text-red-200">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form
+          onSubmit={handleSubmit}
+          autoComplete="off"
+          className="space-y-5"
+        >
           <div>
             <label
-              htmlFor="email"
+              htmlFor="auditflow-login-email"
               className="mb-2 block text-sm font-medium text-slate-200"
             >
               Correo
             </label>
             <input
-              id="email"
+              id="auditflow-login-email"
+              name="auditflow-login-email"
               type="email"
-              autoComplete="email"
+              autoComplete="off"
+              inputMode="email"
               className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              placeholder="correo@ejemplo.com"
               required
             />
           </div>
 
           <div>
             <label
-              htmlFor="password"
+              htmlFor="auditflow-login-password"
               className="mb-2 block text-sm font-medium text-slate-200"
             >
               Contraseña
             </label>
             <input
-              id="password"
+              id="auditflow-login-password"
+              name="auditflow-login-password"
               type="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              placeholder="Ingresa tu contraseña"
               required
             />
           </div>
