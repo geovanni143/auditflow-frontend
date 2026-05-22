@@ -2,23 +2,43 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ApiError } from "@/lib/api";
-import { getMe, logout } from "@/lib/auth";
+import { getMe } from "@/lib/auth";
+import { getProjects } from "@/lib/projects";
+import { getFindings } from "@/lib/findings";
+import { AppNav } from "@/components/AppNav";
 import type { AuthUser } from "@/types/auth";
 
 export default function DashboardPage() {
   const router = useRouter();
 
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [projectCount, setProjectCount] = useState(0);
+  const [findingCount, setFindingCount] = useState(0);
+  const [criticalCount, setCriticalCount] = useState(0);
+  const [openCount, setOpenCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
-    async function loadUser() {
+    async function loadDashboard() {
       try {
         const currentUser = await getMe();
+        const projects = await getProjects();
+        const findingsPage = await getFindings({ page: 0, size: 50 });
+
         setUser(currentUser);
+        setProjectCount(projects.length);
+        setFindingCount(findingsPage.totalElements);
+        setCriticalCount(
+          findingsPage.content.filter((finding) => finding.severity === "CRITICAL")
+            .length
+        );
+        setOpenCount(
+          findingsPage.content.filter((finding) => finding.status === "OPEN")
+            .length
+        );
       } catch (err) {
         if (err instanceof ApiError) {
           if (err.status === 401) {
@@ -41,98 +61,85 @@ export default function DashboardPage() {
       }
     }
 
-    loadUser();
+    loadDashboard();
   }, [router]);
-
-  async function handleLogout() {
-    setIsLoggingOut(true);
-
-    try {
-      await logout();
-      router.replace("/login");
-    } catch {
-      router.replace("/login");
-    } finally {
-      setIsLoggingOut(false);
-    }
-  }
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
-        <p className="text-sm text-slate-300">Validando sesión...</p>
+      <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
+        <p className="text-sm text-slate-300">Cargando dashboard...</p>
       </main>
     );
   }
 
   if (error) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
-        <section className="w-full max-w-md rounded-2xl border border-red-900 bg-red-950/40 p-8 text-center">
-          <h1 className="text-2xl font-bold text-white">Acceso restringido</h1>
-          <p className="mt-3 text-sm text-red-200">{error}</p>
-          <button
-            onClick={() => router.replace("/login")}
-            className="mt-6 rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-950"
-          >
-            Volver al login
-          </button>
+      <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
+        <section className="rounded-2xl border border-red-900 bg-red-950/40 p-8">
+          <h1 className="text-2xl font-bold">Error</h1>
+          <p className="mt-2 text-red-200">{error}</p>
         </section>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-8 text-white">
-      <section className="mx-auto max-w-5xl">
-        <header className="mb-8 flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="mb-2 text-sm font-medium text-cyan-400">AuditFlow</p>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="mt-2 text-sm text-slate-400">
-              Sesión activa usando cookie HTTPOnly.
-            </p>
+    <main className="min-h-screen bg-slate-950 text-white">
+      <AppNav title="Dashboard" />
+
+      <section className="mx-auto max-w-7xl px-6 py-8">
+        <div className="mb-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+          <p className="text-sm text-cyan-400">Sesión activa</p>
+          <h2 className="mt-2 text-3xl font-bold">
+            Bienvenido, {user?.fullName}
+          </h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Rol: {user?.role} · Organización: {user?.organizationName}
+          </p>
+        </div>
+
+        <section className="grid gap-4 md:grid-cols-4">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <p className="text-sm text-slate-400">Proyectos</p>
+            <p className="mt-3 text-3xl font-bold">{projectCount}</p>
           </div>
 
-          <button
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-400 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <p className="text-sm text-slate-400">Findings</p>
+            <p className="mt-3 text-3xl font-bold">{findingCount}</p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <p className="text-sm text-slate-400">Críticos visibles</p>
+            <p className="mt-3 text-3xl font-bold">{criticalCount}</p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <p className="text-sm text-slate-400">Abiertos visibles</p>
+            <p className="mt-3 text-3xl font-bold">{openCount}</p>
+          </div>
+        </section>
+
+        <section className="mt-8 grid gap-4 md:grid-cols-2">
+          <Link
+            href="/projects"
+            className="rounded-2xl border border-slate-800 bg-slate-900 p-6 transition hover:border-cyan-400"
           >
-            {isLoggingOut ? "Cerrando..." : "Cerrar sesión"}
-          </button>
-        </header>
+            <h3 className="text-xl font-semibold">Gestionar proyectos</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              Crear, revisar y administrar auditorías.
+            </p>
+          </Link>
 
-        <section className="grid gap-4 md:grid-cols-2">
-          <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h2 className="text-lg font-semibold">Usuario autenticado</h2>
-            <div className="mt-4 space-y-3 text-sm text-slate-300">
-              <p>
-                <span className="text-slate-500">Nombre:</span>{" "}
-                {user?.fullName}
-              </p>
-              <p>
-                <span className="text-slate-500">Correo:</span> {user?.email}
-              </p>
-              <p>
-                <span className="text-slate-500">Rol:</span> {user?.role}
-              </p>
-              <p>
-                <span className="text-slate-500">Organización:</span>{" "}
-                {user?.organizationName}
-              </p>
-            </div>
-          </article>
-
-          <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h2 className="text-lg font-semibold">Estado de seguridad</h2>
-            <div className="mt-4 space-y-3 text-sm text-slate-300">
-              <p>[OK] Token no visible en JavaScript</p>
-              <p>[OK] Cookie enviada con credentials include</p>
-              <p>[OK] Auth/me validado desde backend</p>
-              <p>[OK] Logout limpia cookie desde backend</p>
-            </div>
-          </article>
+          <Link
+            href="/findings"
+            className="rounded-2xl border border-slate-800 bg-slate-900 p-6 transition hover:border-cyan-400"
+          >
+            <h3 className="text-xl font-semibold">Gestionar findings</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              Registrar hallazgos, severidades y estados.
+            </p>
+          </Link>
         </section>
       </section>
     </main>
