@@ -11,8 +11,7 @@ export default function HomePage() {
         </h1>
 
         <p className="mx-auto mt-4 max-w-xl text-slate-400">
-          MVP Fullstack con Next.js, Spring Boot, PostgreSQL, RBAC y
-          autenticación mediante cookie HTTPOnly.
+          BIENVENIDO
         </p>
 
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
