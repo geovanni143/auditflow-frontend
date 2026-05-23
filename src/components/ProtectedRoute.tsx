@@ -19,13 +19,16 @@ type ProtectedRouteProps = {
   requiredRole?: "ADMIN" | "AUDITOR";
 };
 
+function redirectToLogin(router: ReturnType<typeof useRouter>) {
+  router.replace("/login");
+}
+
 export default function ProtectedRoute({
   children,
   requiredRole,
 }: ProtectedRouteProps) {
   const router = useRouter();
 
-  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isAllowed, setIsAllowed] = useState(false);
 
   useEffect(() => {
@@ -33,7 +36,16 @@ export default function ProtectedRoute({
 
     async function validateSession() {
       try {
-        const user = await apiFetch<AuthUser>("/api/auth/me");
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          window.setTimeout(() => {
+            reject(new Error("Session validation timeout"));
+          }, 5000);
+        });
+
+        const user = await Promise.race([
+          apiFetch<AuthUser>("/api/auth/me"),
+          timeoutPromise,
+        ]);
 
         if (!isMounted) {
           return;
@@ -52,16 +64,12 @@ export default function ProtectedRoute({
 
         if (error instanceof ApiError) {
           if (error.status === 401 || error.status === 403) {
-            router.replace("/login");
+            redirectToLogin(router);
             return;
           }
         }
 
-        router.replace("/login");
-      } finally {
-        if (isMounted) {
-          setIsCheckingSession(false);
-        }
+        redirectToLogin(router);
       }
     }
 
@@ -72,14 +80,14 @@ export default function ProtectedRoute({
     };
   }, [router, requiredRole]);
 
-  if (isCheckingSession || !isAllowed) {
+  if (!isAllowed) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
         <section className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center shadow-xl">
           <p className="mb-2 text-sm font-medium text-cyan-400">AuditFlow</p>
           <h1 className="text-xl font-semibold">Verificando sesión...</h1>
           <p className="mt-2 text-sm text-slate-400">
-            Espera un momento.
+            Validando acceso seguro.
           </p>
         </section>
       </main>

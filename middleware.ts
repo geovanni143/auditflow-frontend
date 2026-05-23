@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PROTECTED_ROUTES = [
-  "/dashboard",
-  "/projects",
-  "/findings",
-  "/users",
-];
+const PROTECTED_ROUTES = ["/dashboard", "/projects", "/findings", "/users"];
 
 const PUBLIC_AUTH_ROUTES = ["/login", "/register"];
 
