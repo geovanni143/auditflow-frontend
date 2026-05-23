@@ -19,8 +19,33 @@ type ProtectedRouteProps = {
   requiredRole?: "ADMIN" | "AUDITOR";
 };
 
-function redirectToLogin(router: ReturnType<typeof useRouter>) {
-  router.replace("/login");
+let cachedUser: AuthUser | null = null;
+let authCheckPromise: Promise<AuthUser> | null = null;
+
+function validateSessionOnce(): Promise<AuthUser> {
+  if (cachedUser) {
+    return Promise.resolve(cachedUser);
+  }
+
+  if (authCheckPromise) {
+    return authCheckPromise;
+  }
+
+  authCheckPromise = apiFetch<AuthUser>("/api/auth/me")
+    .then((user) => {
+      cachedUser = user;
+      return user;
+    })
+    .finally(() => {
+      authCheckPromise = null;
+    });
+
+  return authCheckPromise;
+}
+
+function clearCachedSession() {
+  cachedUser = null;
+  authCheckPromise = null;
 }
 
 export default function ProtectedRoute({
@@ -29,6 +54,7 @@ export default function ProtectedRoute({
 }: ProtectedRouteProps) {
   const router = useRouter();
 
+  const [isCheckingSession, setIsCheckingSession] = useState(!cachedUser);
   const [isAllowed, setIsAllowed] = useState(false);
 
   useEffect(() => {
@@ -43,7 +69,7 @@ export default function ProtectedRoute({
         });
 
         const user = await Promise.race([
-          apiFetch<AuthUser>("/api/auth/me"),
+          validateSessionOnce(),
           timeoutPromise,
         ]);
 
@@ -58,18 +84,24 @@ export default function ProtectedRoute({
 
         setIsAllowed(true);
       } catch (error) {
+        clearCachedSession();
+
         if (!isMounted) {
           return;
         }
 
         if (error instanceof ApiError) {
           if (error.status === 401 || error.status === 403) {
-            redirectToLogin(router);
+            router.replace("/login");
             return;
           }
         }
 
-        redirectToLogin(router);
+        router.replace("/login");
+      } finally {
+        if (isMounted) {
+          setIsCheckingSession(false);
+        }
       }
     }
 
@@ -80,7 +112,7 @@ export default function ProtectedRoute({
     };
   }, [router, requiredRole]);
 
-  if (!isAllowed) {
+  if (isCheckingSession || !isAllowed) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
         <section className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center shadow-xl">
