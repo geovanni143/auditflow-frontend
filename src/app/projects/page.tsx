@@ -615,7 +615,7 @@ function ProjectsContent() {
                   >
                     {savingProjectId === editingProjectId
                       ? "Guardando..."
-                      : "Guardar cambios con advertencia"}
+                      : "Guardar cambios"}
                   </button>
 
                   <button
